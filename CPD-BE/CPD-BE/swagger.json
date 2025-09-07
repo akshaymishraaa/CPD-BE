@@ -1,0 +1,595 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "CPD Application API",
+    "version": "1.0.0",
+    "description": "API documentation for CPD Application (Authentication, Patient, Doctor, Clinic, Appointment)"
+  },
+  "servers": [
+    { "url": "http://localhost:3000/api" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "RegisterUser": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string" },
+          "email": { "type": "string" },
+          "phone": { "type": "string" },
+          "password": { "type": "string" },
+          "role": { "type": "string", "enum": ["patient", "doctor", "admin", "clinic"] }
+        },
+        "required": ["username", "email", "phone", "password", "role"]
+      },
+      "LoginUser": {
+        "type": "object",
+        "properties": {
+          "identifier": { "type": "string" },
+          "password": { "type": "string" }
+        },
+        "required": ["identifier", "password"]
+      },
+      "UpdatePatientProfile": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "phone": { "type": "string" },
+          "address": { "type": "string" }
+        }
+      },
+      "BookAppointment": {
+        "type": "object",
+        "properties": {
+          "doctorId": { "type": "string" },
+          "clinicId": { "type": "string" },
+          "date": { "type": "string", "format": "date-time" },
+          "reason": { "type": "string" }
+        },
+        "required": ["doctorId", "clinicId", "date", "reason"]
+      },
+      "UpdateAppointment": {
+        "type": "object",
+        "properties": {
+          "date": { "type": "string", "format": "date-time" },
+          "reason": { "type": "string" },
+          "status": { "type": "string" }
+        }
+      },
+      "DoctorAvailability": {
+        "type": "object",
+        "properties": {
+          "doctorId": { "type": "string" },
+          "availableSlots": {
+            "type": "array",
+            "items": { "type": "string", "format": "date-time" }
+          }
+        }
+      },
+      "Doctor": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "specialization": { "type": "string" },
+          "email": { "type": "string" },
+          "phone": { "type": "string" },
+          "clinicId": { "type": "string" }
+        }
+      },
+      "Clinic": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "address": { "type": "string" },
+          "phone": { "type": "string" },
+          "email": { "type": "string" }
+        }
+      },
+      "Appointment": {
+        "type": "object",
+        "properties": {
+          "patientId": { "type": "string" },
+          "doctorId": { "type": "string" },
+          "clinicId": { "type": "string" },
+          "date": { "type": "string", "format": "date-time" },
+          "reason": { "type": "string" },
+          "status": { "type": "string" }
+        }
+      }
+    }
+  },
+  "security": [
+    { "BearerAuth": [] }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterUser" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User registered successfully" },
+          "400": { "description": "Validation error" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Login user",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginUser" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login successful" },
+          "401": { "description": "Invalid credentials" }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "Logout user",
+        "tags": ["Auth"],
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Logout successful" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "summary": "Reset password",
+        "tags": ["Auth"],
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "newPassword": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Password reset successful" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/auth/forgot-identifier": {
+      "post": {
+        "summary": "Forgot username/email/phone",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": { "type": "string", "enum": ["username", "email", "phone"] },
+                  "value": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Identifier found" },
+          "404": { "description": "User not found" }
+        }
+      }
+    },
+    "/patients/{id}/profile": {
+      "get": {
+        "summary": "Get patient profile",
+        "tags": ["Patient"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Patient profile" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "put": {
+        "summary": "Update patient profile",
+        "tags": ["Patient"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdatePatientProfile" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Profile updated" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/patients/{id}/appointments": {
+      "get": {
+        "summary": "List patient appointments",
+        "tags": ["Patient"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "List of appointments" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/patients/appointments": {
+      "post": {
+        "summary": "Book appointment",
+        "tags": ["Patient"],
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BookAppointment" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Appointment booked" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/patients/appointments/{appointmentId}": {
+      "put": {
+        "summary": "Update appointment",
+        "tags": ["Patient"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "appointmentId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateAppointment" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Appointment updated" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/patients/appointments/{appointmentId}/reschedule": {
+      "put": {
+        "summary": "Reschedule appointment",
+        "tags": ["Patient"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "appointmentId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "newDate": { "type": "string", "format": "date-time" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Appointment rescheduled" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/patients/appointments/{appointmentId}/cancel": {
+      "put": {
+        "summary": "Cancel appointment",
+        "tags": ["Patient"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "appointmentId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Appointment cancelled" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/patients/{id}/medical-history": {
+      "get": {
+        "summary": "View medical history",
+        "tags": ["Patient"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Medical history" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/doctors": {
+      "get": {
+        "summary": "List all doctors",
+        "tags": ["Doctor"],
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of doctors" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "post": {
+        "summary": "Create a new doctor",
+        "tags": ["Doctor"],
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Doctor" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Doctor created" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/doctors/{id}": {
+      "get": {
+        "summary": "Get doctor profile",
+        "tags": ["Doctor"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Doctor profile" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "put": {
+        "summary": "Update doctor profile",
+        "tags": ["Doctor"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Doctor" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Doctor updated" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "delete": {
+        "summary": "Delete doctor",
+        "tags": ["Doctor"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Doctor deleted" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/doctors/{id}/availability": {
+      "get": {
+        "summary": "Get doctor availability",
+        "tags": ["Doctor"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Doctor availability",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DoctorAvailability" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/clinics": {
+      "get": {
+        "summary": "List all clinics",
+        "tags": ["Clinic"],
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of clinics" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "post": {
+        "summary": "Create a new clinic",
+        "tags": ["Clinic"],
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Clinic" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Clinic created" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/clinics/{id}": {
+      "get": {
+        "summary": "Get clinic details",
+        "tags": ["Clinic"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Clinic details" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "put": {
+        "summary": "Update clinic details",
+        "tags": ["Clinic"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Clinic" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Clinic updated" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "delete": {
+        "summary": "Delete clinic",
+        "tags": ["Clinic"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Clinic deleted" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/appointments": {
+      "get": {
+        "summary": "List all appointments",
+        "tags": ["Appointment"],
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of appointments" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "post": {
+        "summary": "Create a new appointment",
+        "tags": ["Appointment"],
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BookAppointment" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Appointment created" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/appointments/{id}": {
+      "get": {
+        "summary": "Get appointment details",
+        "tags": ["Appointment"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Appointment details" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "put": {
+        "summary": "Update appointment",
+        "tags": ["Appointment"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateAppointment" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Appointment updated" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "delete": {
+        "summary": "Delete appointment",
+        "tags": ["Appointment"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Appointment deleted" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    }
+  }
+}
