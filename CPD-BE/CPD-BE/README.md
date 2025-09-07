@@ -1,99 +1,106 @@
-# Doctor-Patient and Clinical Management System
+# ⚙️ CPD Backend (BE)
 
-## Overview
-The Doctor-Patient and Clinical Management System is a comprehensive application designed to streamline the interactions between doctors, patients, and clinics. This system facilitates appointment scheduling, patient management, and doctor availability tracking, ensuring efficient healthcare delivery.
+The **backend service** for the CPD Application, powering **Patients, Doctors, Clinics, Labs, and Admins**.  
+It provides secure APIs for **authentication, appointments, medical records, AI integration, and system management**.
 
-## Features
-- **Doctor Management**: Register and manage doctor profiles, including availability and prescriptions.
-- **Patient Management**: Register patients, manage their profiles, and maintain medical history.
-- **Appointment Scheduling**: Create, reschedule, and cancel appointments with ease.
-- **Clinic Management**: Register clinics, assign doctors, and manage time slots.
+---
 
-## Project Structure
-```
-CPD-BE
-├── src
-│   ├── app.ts
-│   ├── controllers
-│   │   ├── doctorController.ts
-│   │   ├── patientController.ts
-│   │   ├── appointmentController.ts
-│   │   └── clinicController.ts
-│   ├── models
-│   │   ├── doctor.ts
-│   │   ├── patient.ts
-│   │   ├── appointment.ts
-│   │   └── clinic.ts
-│   ├── routes
-│   │   ├── doctorRoutes.ts
-│   │   ├── patientRoutes.ts
-│   │   ├── appointmentRoutes.ts
-│   │   └── clinicRoutes.ts
-│   ├── services
-│   │   ├── doctorService.ts
-│   │   ├── patientService.ts
-│   │   ├── appointmentService.ts
-│   │   └── clinicService.ts
-│   └── types
-│       └── index.ts
-├── package.json
-├── tsconfig.json
-└── README.md
-```
+## ✨ Features (Backend Scope)
 
-## Setup Instructions
-1. Clone the repository:
-   ```
-   git clone <repository-url>
-   ```
-2. Navigate to the project directory:
-   ```
-   cd CPD-BE
-   ```
-3. Install the dependencies:
-   ```
-   npm install
-   ```
-4. Configure the database connection in `src/app.ts`.
-5. Start the application:
-   ```
-   npm start
-   ```
+- 🔐 **Authentication & Authorization**  
+  - Role-based access: Patient, Doctor, Clinic, Admin, Lab  
+  - JWT-based authentication with token expiry  
+  - MFA/OTP support *(optional)*  
 
-## API Endpoints
-- **Doctors**
-  - `POST /doctors/register`: Register a new doctor.
-  - `PUT /doctors/:id`: Update doctor profile.
-  - `GET /doctors/:id/availability`: Get doctor availability.
-  - `POST /doctors/:id/prescription`: Add a prescription for a patient.
+- 📅 **Appointments Management**  
+  - Book, reschedule, cancel appointments  
+  - Priority & emergency bookings  
+  - Clinic & doctor slot management  
 
-- **Patients**
-  - `POST /patients/register`: Register a new patient.
-  - `POST /patients/login`: Patient login.
-  - `PUT /patients/:id`: Update patient profile.
-  - `POST /patients/:id/appointments`: Book an appointment.
-  - `GET /patients/:id/medical-history`: View medical history.
+- 🧑‍⚕️ **Medical Records**  
+  - Prescriptions, diagnoses, treatment notes  
+  - Medication & appointment history  
+  - Secure file sharing (PDF/Reports)  
 
-- **Appointments**
-  - `POST /appointments`: Create a new appointment.
-  - `PUT /appointments/:id/reschedule`: Reschedule an appointment.
-  - `DELETE /appointments/:id`: Cancel an appointment.
-  - `GET /appointments/:id`: Get appointment details.
+- 🤖 **AI Assistant Integration**  
+  - Symptom checker with demographics  
+  - AI-generated suggestions for doctors  
+  - Consent & audit logging  
 
-- **Clinics**
-  - `POST /clinics/register`: Register a new clinic.
-  - `POST /clinics/:id/assign-doctor`: Assign a doctor to a clinic.
-  - `PUT /clinics/:id/manage-time-slots`: Manage clinic time slots.
-  - `GET /clinics/:id/patient-history`: Access patient history.
+- 🛡️ **System Administration**  
+  - User & role management  
+  - System monitoring & activity logs  
+  - Compliance reports (GDPR/HIPAA)  
 
-## Technologies Used
-- Node.js
-- Express.js
-- TypeScript
-- MongoDB (or any other database of choice)
+---
 
-## Contributing
-Contributions are welcome! Please submit a pull request or open an issue for any enhancements or bug fixes.
+## 🛠️ Tech Stack
 
-## License
-This project is licensed under the MIT License. See the LICENSE file for details.
+- **Runtime:** Node.js (TypeScript)  
+- **Framework:** Express.js  
+- **Database:** MongoDB (Mongoose ODM)  
+- **Authentication:** JWT, bcrypt, MFA/OTP *(optional)*  
+- **API Docs:** Swagger / OpenAPI  
+- **DevOps:** Docker, GitHub Actions/Jenkins, AWS (EC2, S3, RDS, CloudFront)  
+- **Monitoring:** Grafana, Sentry, New Relic  
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/your-org/cpd-backend.git
+cd cpd-backend
+. Install dependencies
+npm install
+
+3. Setup environment variables
+
+Create a .env file in the root directory:
+
+PORT=5000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_secret_key
+NODE_ENV=development
+
+
+(Optional) Add other keys like EMAIL_SERVICE, AWS_ACCESS_KEY, AI_API_KEY if required.
+
+4. Run the server
+npm run dev
+
+
+Runs the server in watch mode with nodemon.
+
+5. Build for production
+npm run build
+npm start
+
+🧪 Testing
+
+Run unit and integration tests:
+
+npm test
+
+🐳 Docker Setup
+
+Build and run the app using Docker:
+
+docker build -t cpd-backend .
+docker run -p 5000:5000 --env-file .env cpd-backend
+
+📖 Documentation
+
+📘 API Documentation
+ – Swagger UI (after running the app)
+
+📄 Product Details
+ – Full feature breakdown
+
+🛡️ Security & Compliance
+ – HIPAA/GDPR policies
+
+📄 License
+
+This project is licensed under the MIT License.
